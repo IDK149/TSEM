@@ -1,13 +1,11 @@
-// Del usuario vamos a recibir una serie de instrucciones que tenemos que pasar a cada una de las letras que simboliza dentro del alfabeto que tenemos
-// Comandos:
-// !size(x, y)
-// !title(String)
-// !font
+extern crate regex;
 use printpdf::*;
+use regex::Regex;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::io::BufWriter;
+mod notas;
 
 fn export(text: String) {
     let (doc, page1, layer1) =
@@ -16,8 +14,7 @@ fn export(text: String) {
     let font = doc
         .add_external_font(File::open("../../../Downloads/lassus/LASSUS.TTF").unwrap())
         .unwrap();
-    // returnfont('A');
-    current_layer.use_text(text, 20 as f32, Mm(10.0), Mm(100.0), &font);
+    current_layer.use_text(text, 50 as f32, Mm(10.0), Mm(100.0), &font);
     doc.save(&mut BufWriter::new(
         File::create("test_working.pdf").unwrap(),
     ))
@@ -29,19 +26,35 @@ fn input() -> std::io::Result<String> {
     let buf_reader = BufReader::new(archivo);
     let mut section = Vec::new();
     for lines in buf_reader.lines() {
-        section.push(lines.unwrap() + "~~")
+        section.push(lines.unwrap())
     }
     Ok(section.concat())
 }
-fn main() {
-    let input = input().unwrap();
-    println!("{input}\n");
-    // parsear el vector:
-    if input.contains("!") {
-        println!("config")
-    } else {
-        println!("Not config")
+
+fn serch(parametro: String, input: String) -> Vec<String> {
+    let re = Regex::new(&parametro).unwrap();
+    let captures = re.captures_iter(&input);
+    let mut strings = Vec::new();
+    for i in captures {
+        strings.push(i.get(1).unwrap().as_str().to_owned())
     }
-    // export(input);
+    return strings;
 }
- 
+
+fn notes() -> String{
+    let notas = serch(r"(?:nota|clave)\(([^)]+)\)".to_string(), input().unwrap());
+    let mut union = Vec::new();
+    for i in notas {
+        let notas = notas::sol();
+        if let Some(replacement) = notas.get(&i) {
+            union.push(replacement.to_owned())
+        } else {
+            union.push(" ".to_string())
+        }
+    }
+    return union.concat()
+}
+
+fn main() {
+    export(notes());
+}

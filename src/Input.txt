@@ -1,3 +1,4 @@
-!()
-`hJGD=
-QRSTUVWXYZ
+fsize(40)
+psize(200,200)
+clave(G)
+nota(1Gb) nota(2Cb)
