@@ -7,14 +7,18 @@ use std::io::BufReader;
 use std::io::BufWriter;
 mod notas;
 
-fn export(text: String) {
-    let (doc, page1, layer1) =
-        PdfDocument::new("PDF_Document_title", Mm(200.0), Mm(200.0), "Layer 1");
+fn export(text: String, config: (u32, (u32, u32))) {
+    let (doc, page1, layer1) = PdfDocument::new(
+        "PDF_Document_title",
+        Mm(config.1.0 as f32),
+        Mm(config.1.1 as f32),
+        "Layer 1",
+    );
     let current_layer = doc.get_page(page1).get_layer(layer1);
     let font = doc
         .add_external_font(File::open("../../../Downloads/lassus/LASSUS.TTF").unwrap())
         .unwrap();
-    current_layer.use_text(text, 50 as f32, Mm(10.0), Mm(100.0), &font);
+    current_layer.use_text(text, config.0 as f32, Mm(10.0), Mm(100.0), &font);
     doc.save(&mut BufWriter::new(
         File::create("test_working.pdf").unwrap(),
     ))
@@ -40,8 +44,25 @@ fn serch(parametro: String, input: String) -> Vec<String> {
     }
     return strings;
 }
+fn config() -> (u32, (u32, u32)) {
+    let psize = serch(r"(?:psize)\(([^)]+)\)".to_string(), input().unwrap());
+    let fsize = serch(r"(?:fsize)\(([^)]+)\)".to_string(), input().unwrap());
+    let mut psize_vec = Vec::new();
+    let mut fsize_vec = Vec::new();
+    for i in psize {
+        let hola: Vec<u32> = i.split(',').filter_map(|s| s.trim().parse().ok()).collect();
+        for e in hola {
+            psize_vec.push(e);
+        }
+    }
+    for i in fsize {
+        fsize_vec.push(i.parse().unwrap())
+    }
+    let psize_vec = psize_vec;
+    (fsize_vec[0], (psize_vec[0], psize_vec[1]))
+}
 
-fn notes() -> String{
+fn notes() -> String {
     let notas = serch(r"(?:nota|clave)\(([^)]+)\)".to_string(), input().unwrap());
     let mut union = Vec::new();
     for i in notas {
@@ -52,9 +73,9 @@ fn notes() -> String{
             union.push(" ".to_string())
         }
     }
-    return union.concat()
+    return union.concat();
 }
 
 fn main() {
-    export(notes());
+    export(notes(), config());
 }
