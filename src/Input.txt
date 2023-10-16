@@ -1,6 +1,8 @@
 fsize(100)
 psize(400,200)
 clave(G)
-nota(2Gb)
-nota(1Gb) 
+compas(1) // Puse directamente la división, pero esto está mal
+nota(4Gb)
+nota(4Gb) 
 nota(2Cb)
+nota(1E)

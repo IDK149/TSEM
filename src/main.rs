@@ -10,8 +10,8 @@ mod notas;
 fn export(text: String, config: (u32, (u32, u32))) {
     let (doc, page1, layer1) = PdfDocument::new(
         "PDF_Document_title",
-        Mm(config.1.0 as f32),
-        Mm(config.1.1 as f32),
+        Mm(config.1 .0 as f32),
+        Mm(config.1 .1 as f32),
         "Layer 1",
     );
     let current_layer = doc.get_page(page1).get_layer(layer1);
@@ -35,7 +35,7 @@ fn input() -> std::io::Result<String> {
     Ok(section.concat())
 }
 
-fn serch(parametro: String, input: String) -> Vec<String> {
+fn search(parametro: &str, input: String) -> Vec<String> {
     let re = Regex::new(&parametro).unwrap();
     let captures = re.captures_iter(&input);
     let mut strings = Vec::new();
@@ -44,9 +44,11 @@ fn serch(parametro: String, input: String) -> Vec<String> {
     }
     return strings;
 }
+// FIXME
+// Considero que esto no está bien optimizado
 fn config() -> (u32, (u32, u32)) {
-    let psize = serch(r"(?:psize)\(([^)]+)\)".to_string(), input().unwrap());
-    let fsize = serch(r"(?:fsize)\(([^)]+)\)".to_string(), input().unwrap());
+    let psize = search(r"(?:psize)\(([^)]+)\)", input().unwrap());
+    let fsize = search(r"(?:fsize)\(([^)]+)\)", input().unwrap());
     let mut psize_vec = Vec::new();
     let mut fsize_vec = Vec::new();
     for i in psize {
@@ -62,12 +64,11 @@ fn config() -> (u32, (u32, u32)) {
     (fsize_vec[0], (psize_vec[0], psize_vec[1]))
 }
 
-fn notes() -> String {
-    let notas = serch(r"(?:nota|clave)\(([^)]+)\)".to_string(), input().unwrap());
+
+fn replace_notes_font(search: Vec<String>) -> String {
     let mut union = Vec::new();
-    for i in notas {
-        let notas = notas::sol();
-        if let Some(replacement) = notas.get(&i) {
+    for i in search {
+        if let Some(replacement) = notas::sol().get(&i) {
             union.push(replacement.to_owned())
         } else {
             union.push(" ".to_string())
@@ -76,6 +77,27 @@ fn notes() -> String {
     return union.concat();
 }
 
+fn compas() -> std::io::Result<String> {
+    let notas = search(r"(?:nota)\(([^)]+)\)", input().unwrap());
+    let compas: f32 = search(r"(?:compas)\(([^)]+)\)", input().unwrap())
+        .concat()
+        .parse()
+        .unwrap();
+    println!("{}", compas);
+    println!("{:?}", notas);
+    let mut result = 0.0;
+    for i in notas {
+        let number: f32 = i.chars().next().unwrap().to_string().parse().unwrap();
+        if result >= compas {
+            return Ok("-".to_string());
+        } else {
+            result += 1.0 / number;
+            continue;
+        }
+    }
+    Ok("".to_string())
+}
+
 fn main() {
-    export(notes(), config());
+    println!("{}", compas().unwrap())
 }
