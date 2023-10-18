@@ -1,8 +1,18 @@
+// The new sintaxis
+
+title(El titulo)
 fsize(100)
-psize(400,200)
-clave(G)
-compas(1) // Puse directamente la división, pero esto está mal
-nota(4Gb)
-nota(4Gb) 
-nota(2Cb)
-nota(1E)
+psize(800,200)
+
+(2/4){
+	clave(G)
+	nota(4Ab)
+	nota(4C#)
+	nota(4D#)
+	nota(4s)
+}
+(3/4){
+	clave(F)
+	nota(2Gb)
+	nota(4Cb)
+}
