@@ -17,7 +17,6 @@ fn export(text: String, configuration: (u32, (u32, u32), String)) {
     let current_layer = doc.get_page(page1).get_layer(layer1);
     let default_font = doc
         .add_external_font(
-            // Warn: Change this to relative path
             File::open("../../../Downloads/DejaVuSansMono/DejaVuSansMNerdFont-Bold.ttf").unwrap(),
         )
         .unwrap();
@@ -43,7 +42,6 @@ fn export(text: String, configuration: (u32, (u32, u32), String)) {
     doc.save(&mut BufWriter::new(File::create("Partitura.pdf").unwrap()))
         .unwrap();
 }
-
 
 // Perf: I don't like the config function and the regex_search function
 fn regex_search(parametro: &str, input: String) -> Vec<String> {
@@ -75,21 +73,6 @@ fn config() -> (u32, (u32, u32), String) {
     (fsize_vec[0], (psize_vec[0], psize_vec[1]), title.concat())
 }
 
-fn replace_to_lassusfont(search: Vec<Vec<String>>) -> String {
-    let mut union = Vec::new();
-    for i in search {
-        for e in i {
-            if let Some(replacement) = notas::sol().get(&e) {
-                union.push(replacement.to_owned())
-            } else {
-                union.push(" ".to_string())
-            }
-        }
-    }
-    println!("{}", union.concat());
-    return union.concat();
-}
-
 fn relative_bar(input: &str) -> f32 {
     match input {
         "2/4" => 0.5,
@@ -110,81 +93,138 @@ fn input_file() -> std::io::Result<String> {
     Ok(section.concat())
 }
 
-fn search_times(texto: &str) -> Vec<Vec<String>> {
-    let re = Regex::new(r"\((\d+/\d+)\)\{([^}]*)\}").unwrap();
-    let mut container_notes = Vec::new();
-    let mut subvector = Vec::new();
+// Info: vec[0] = clave
+fn search_times(texto: &str) -> Vec<Vec<Vec<String>>> {
+    let re = Regex::new(r"clave\(([^)]+)\)\[([^\]]*)\]").unwrap();
+    let mut fullvector = Vec::new();
 
-    for cap in re.captures_iter(texto) {
-        let tiempo = &cap[1];
-        let contenido = &cap[2];
-        let re_notas = Regex::new(r"(?:nota|clave)\(([^)]+)\)").unwrap();
-
-        if !subvector.is_empty() {
-            container_notes.push(subvector.clone());
-            subvector.clear();
+    for captures in re.captures_iter(texto) {
+        let sub_re = Regex::new(r"\((\d+/\d+)\)\{([^}]*)\}").unwrap();
+        let mut container_notes = Vec::new();
+        if let Some(captura) = captures.get(1) {
+            container_notes.push(vec![captura.as_str().to_string()]);
         }
 
-        subvector.push(tiempo.to_string());
+        for subcaptures in sub_re.captures_iter(&captures[2]) {
+            let tiempo = &subcaptures[1];
+            let contenido = &subcaptures[2];
+            let re_notas = Regex::new(r"(?:nota)\(([^)]+)\)").unwrap();
+            let mut subvector = Vec::new();
 
-        for nota in re_notas.captures_iter(contenido) {
-            let contenido_nota = &nota[1];
-            subvector.push(contenido_nota.to_string());
+            subvector.push(tiempo.to_string());
+
+            for nota in re_notas.captures_iter(contenido) {
+                let contenido_nota = &nota[1];
+                subvector.push(contenido_nota.to_string());
+            }
+
+            container_notes.push(subvector);
         }
+
+        fullvector.push(container_notes);
     }
 
-    if !subvector.is_empty() {
-        container_notes.push(subvector);
-    }
-
-    println!("{:?}", container_notes);
-    container_notes
+    fullvector
 }
 
-fn times_logic(input: Vec<Vec<String>>) -> Vec<Vec<String>> {
-    let mut container_vectors = Vec::new();
-
-    for item in input {
-        let mut vectors = Vec::new();
-        let mut result = 0.0;
-
-        for (index, elements) in item.iter().enumerate() {
+fn times_logic(e: Vec<Vec<Vec<String>>>) -> Vec<Vec<Vec<String>>> {
+    let mut returning_vector = Vec::new();
+    for i in e {
+        let mut container_vectors = Vec::new();
+        for (index, e) in i.iter().enumerate() {
             if index == 0 {
-                if index + 1 < item.len() {
-                    vectors.push(item[index + 1].to_string());
-                }
-            } else if index == 1 {
-                vectors.push(item[0].to_string());
-            } else {
-                let numero: f32 = elements
-                    .chars()
-                    .next()
-                    .unwrap()
-                    .to_string()
-                    .parse()
-                    .unwrap_or(0.0);
-                let tempo = relative_bar(&item[0]);
-
-                if (1.0 / numero) + result == tempo {
-                    vectors.push(elements.to_string());
-                    vectors.push("-".to_string());
-                    result = 0.0;
+                // returning_vector.push(vec![e.clone()])
+            }
+            let mut vectors = Vec::new();
+            let mut result = 0.0;
+            for (index, elements) in e.iter().enumerate() {
+                if index == 0 {
+                    vectors.push(elements.to_string())
                 } else {
-                    result += 1.0 / numero;
-                    vectors.push(elements.to_string());
+                    let numero: f32 = elements
+                        .chars()
+                        .next()
+                        .unwrap()
+                        .to_string()
+                        .parse()
+                        .unwrap_or(0.0);
+                    let tempo = relative_bar(&e[0]);
+
+                    if (1.0 / numero) + result == tempo {
+                        vectors.push(elements.to_string());
+                        vectors.push("-".to_string());
+                        result = 0.0;
+                    } else {
+                        result += 1.0 / numero;
+                        vectors.push(elements.to_string());
+                    }
                 }
             }
+            container_vectors.push(vectors)
         }
-
-        container_vectors.push(vectors);
+        returning_vector.push(container_vectors)
     }
-
-    println!("{:?}", container_vectors);
-    container_vectors
+    returning_vector
 }
 
+fn replace_to_lassusfont(search: Vec<Vec<Vec<String>>>) -> String {
+    let mut union = Vec::new();
+    for i in search {
+        println!("{}", i[0][0]);
+        match i[0][0].as_str() {
+            "G" => {
+                for e in i {
+                    for j in e {
+                        if let Some(replacement) = notas::sol().get(&j.to_string()) {
+                            union.push(replacement.to_owned())
+                        } else {
+                            union.push(" ".to_string())
+                        }
+                    }
+                }
+            }
+            "F" => {
+                for e in i {
+                    for j in e {
+                        if let Some(replacement) = notas::fa().get(&j.to_string()) {
+                            union.push(replacement.to_owned())
+                        } else {
+                            union.push(" ".to_string())
+                        }
+                    }
+                }
+            }
+            "C1" => {
+                for e in i{
+                    for j in e {
+                        if let Some(replacement) = notas::do1().get(&j.to_string()) {
+                            union.push(replacement.to_owned())
+                        } else {
+                            union.push(" ".to_string())
+                        }
+                    }
+                }
+            }
+            "C2" => {
+                for e in i {
+                    for j in e {
+                        if let Some(replacement) = notas::do2().get(&j.to_string()) {
+                            union.push(replacement.to_owned())
+                        } else {
+                            union.push(" ".to_string())
+                        }
+                    }
+                }
+            }
+            _ => println!(" "),
+        }
+    }
+    union.concat()
+}
 fn main() {
-    let input = search_times(&input_file().unwrap());
-    let hola = replace_to_lassusfont(times_logic(input));
-    export(hola, config())
+    let searchtimes = search_times(&input_file().unwrap());
+    let hola = times_logic(searchtimes);
+    println!("{hola:?}");
+    println!("{}", replace_to_lassusfont(hola.clone()));
+    export(replace_to_lassusfont(hola), config())
 }
