@@ -1,9 +1,6 @@
 # TSEM
 Este proyecto nace con el objetivo de brindar flexibilidad a la hora de escribir partituras, donde se busca rapidez y eficiencia.
 
-## Tabla de Contenidos: 
-Agrega una tabla de contenidos con enlaces a las secciones clave del README para facilitar la navegación.
-
 ## Requisitos
 - Rust
 - Lassus Font V2 (Una alteración de la font original "Lassus")
@@ -36,7 +33,7 @@ clave(F)[
 ```
 Al ejecutar se creará un archivo .pdf con el formato deseado.
 
-> **Nota**: la identación no es importante, sin embargo el uso de corchetes, paréntesis y llaves es de uso obligatorio.
+> **Nota**: la indentación no es importante, sin embargo el uso de corchetes, paréntesis y llaves es de uso obligatorio.
 
 
 ## Futuras mejoras:
