@@ -48,7 +48,7 @@ pub fn sol() -> HashMap<String, String> {
 
     input_to_char.insert("4B#".to_string(), "Ë_".to_string());
     input_to_char.insert("2B#".to_string(), "Ëv".to_string());
-    input_to_char.insert("1B#".to_string(), "Ë]".to_string());
+    input_to_char.insert("1B#".to_string(), "Ëp".to_string());
 
     // Do
     input_to_char.insert("4C".to_string(), "+".to_string());
@@ -165,7 +165,7 @@ pub fn fa() -> HashMap<String, String> {
 
     input_to_char.insert("4D#".to_string(), "Ë_".to_string());
     input_to_char.insert("2D#".to_string(), "Ëv".to_string());
-    input_to_char.insert("1D#".to_string(), "Ë]".to_string());
+    input_to_char.insert("1D#".to_string(), "Ëp".to_string());
 
     // Do
     input_to_char.insert("4E".to_string(), "+".to_string());
@@ -282,7 +282,7 @@ pub fn do1() -> HashMap<String, String> {
 
     input_to_char.insert("4C#".to_string(), "Ë_".to_string());
     input_to_char.insert("2C#".to_string(), "Ëv".to_string());
-    input_to_char.insert("1C#".to_string(), "Ë]".to_string());
+    input_to_char.insert("1C#".to_string(), "Ëp".to_string());
 
     // Do
     input_to_char.insert("4D".to_string(), "+".to_string());
@@ -398,7 +398,7 @@ pub fn do2() -> HashMap<String, String> {
 
     input_to_char.insert("4A#".to_string(), "Ë_".to_string());
     input_to_char.insert("2A#".to_string(), "Ëv".to_string());
-    input_to_char.insert("1A#".to_string(), "Ë]".to_string());
+    input_to_char.insert("1A#".to_string(), "Ëp".to_string());
 
     // Do
     input_to_char.insert("4B".to_string(), "+".to_string());

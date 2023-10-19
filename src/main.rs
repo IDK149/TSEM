@@ -17,11 +17,11 @@ fn export(text: String, configuration: (u32, (u32, u32), String)) {
     let current_layer = doc.get_page(page1).get_layer(layer1);
     let default_font = doc
         .add_external_font(
-            File::open("../../../Downloads/DejaVuSansMono/DejaVuSansMNerdFont-Bold.ttf").unwrap(),
+            File::open("../Font/DejaVuSansMNerdFont-Bold.ttf").unwrap(),
         )
         .unwrap();
     let music_font = doc
-        .add_external_font(File::open("../../../Downloads/lassus/LassusV2.otf").unwrap())
+        .add_external_font(File::open("../Font/LassusV2.otf").unwrap())
         .unwrap();
 
     current_layer.use_text(
@@ -35,7 +35,7 @@ fn export(text: String, configuration: (u32, (u32, u32), String)) {
         text,
         configuration.0 as f32,
         Mm(10.0),
-        Mm(100.0),
+        Mm(configuration.1.1 as f32 - 40.0),
         &music_font,
     );
 
@@ -170,7 +170,6 @@ fn times_logic(e: Vec<Vec<Vec<String>>>) -> Vec<Vec<Vec<String>>> {
 fn replace_to_lassusfont(search: Vec<Vec<Vec<String>>>) -> String {
     let mut union = Vec::new();
     for i in search {
-        println!("{}", i[0][0]);
         match i[0][0].as_str() {
             "G" => {
                 for e in i {
@@ -195,7 +194,7 @@ fn replace_to_lassusfont(search: Vec<Vec<Vec<String>>>) -> String {
                 }
             }
             "C1" => {
-                for e in i{
+                for e in i {
                     for j in e {
                         if let Some(replacement) = notas::do1().get(&j.to_string()) {
                             union.push(replacement.to_owned())
@@ -216,7 +215,7 @@ fn replace_to_lassusfont(search: Vec<Vec<Vec<String>>>) -> String {
                     }
                 }
             }
-            _ => println!(" "),
+            _ => println!(""),
         }
     }
     union.concat()
@@ -224,7 +223,5 @@ fn replace_to_lassusfont(search: Vec<Vec<Vec<String>>>) -> String {
 fn main() {
     let searchtimes = search_times(&input_file().unwrap());
     let hola = times_logic(searchtimes);
-    println!("{hola:?}");
-    println!("{}", replace_to_lassusfont(hola.clone()));
     export(replace_to_lassusfont(hola), config())
 }
