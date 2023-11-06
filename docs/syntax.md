@@ -1,7 +1,7 @@
 # Encabezado
-title() Título de la pieza
-sub() Subgrupo de la pieza
-autor() Nombre del autor
+- title() Título de la pieza
+- sub() Subgrupo de la pieza
+- autor() Nombre del autor
 # Estructura
 Dentro de la sintaxis, es muy importante el uso de paréntesis, corchetes y llaves. La estructura básica de la composición es la siguiente:
 ```
@@ -29,9 +29,10 @@ El sistema de notas, se basa en la nomenclatura Helmholtz con el agregado de un 
 - ...
 - nota(1G) Redonda, Sol sin alteraciones
 ### Silencios
+Como en el sistema de notas, se anteponea a la s(silence) la duración de la nota.
 - nota(1s)
 - nota(2s)
 - nota(4s)
 - nota(8s)
 
-> **Nota**Si deseas ayudar en la creación de caracteres, siente libre de descargar **LassusV2** y modificar con los caracteres, estaré encantado de poder colocar el carácter dentro de las opciones del usuario.
+> **Nota**Si deseas ayudar en la creación de caracteres, siente libre de descargar **LassusV2** y modificar con los carácteres, estaré encantado de colaborar para mejorar el proyecto.
