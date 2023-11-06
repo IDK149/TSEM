@@ -7,43 +7,71 @@ use std::io::BufReader;
 use std::io::BufWriter;
 mod notas;
 
-fn export(text: String, configuration: (u32, (u32, u32), String)) {
-    let (doc, page1, layer1) = PdfDocument::new(
-        "",
-        Mm(configuration.1 .0 as f32),
-        Mm(configuration.1 .1 as f32),
-        "Layer 1",
-    );
+// Todo: - Hacer una función de alineación a la derecha, a la izquierda y al centro
+// otra función para pasar de la medida de la página a la cantidad de caracteres
+// cambiar la bold de los subtitulos por regular
+
+fn export(text: String, top: (String, String, String)) {
+    let (doc, page1, layer1) = PdfDocument::new("", Mm(210 as f32), Mm(297 as f32), "Layer 1");
     let current_layer = doc.get_page(page1).get_layer(layer1);
     let default_font = doc
-        .add_external_font(
-            File::open("../Font/DejaVuSansMNerdFont-Bold.ttf").unwrap(),
-        )
+        .add_external_font(File::open("../Font/DejaVuSansMNerdFont-Bold.ttf").unwrap())
         .unwrap();
     let music_font = doc
         .add_external_font(File::open("../Font/LassusV2.otf").unwrap())
         .unwrap();
+    let characteres_music = 46;
+    let characteres_default = 70;
+    let characteres_default_minor = 86;
+    let sample = separar(&text, characteres_music as f32 - 4.0);
+    let mut linebreak = 10.0;
 
+    for i in sample {
+        current_layer.use_text(i, 60.0, Mm(10.0), Mm(255.0 - linebreak), &music_font);
+        linebreak += 20.0;
+    }
+    // Title
     current_layer.use_text(
-        configuration.2,
+        &top.0,
+        15.0,
+        Mm(
+            (210 as f32 * (characteres_default as f32 - top.0.chars().count() as f32) / 2.0)
+                / characteres_default as f32,
+        ),
+        Mm(297.0 - 10.0),
+        &default_font,
+    );
+    // subTitle
+    current_layer.use_text(
+        &top.1,
         12.0,
-        Mm(configuration.1 .0 as f32 / 3.0),
-        Mm(configuration.1 .1 as f32 - 10.0),
+        Mm((210.0 / characteres_default_minor as f32)
+            * (characteres_default_minor as f32 - top.1.len() as f32)
+            - 10.0),
+        Mm(297.0 - 25.0),
         &default_font,
     );
     current_layer.use_text(
-        text,
-        configuration.0 as f32,
-        Mm(10.0),
-        Mm(configuration.1.1 as f32 - 40.0),
-        &music_font,
+        &top.2,
+        12.0,
+        Mm((210.0 / characteres_default_minor as f32)
+            * (characteres_default_minor as f32 - top.2.len() as f32)
+            - 10.0),
+        Mm(297.0 - 32.0),
+        &default_font,
     );
 
     doc.save(&mut BufWriter::new(File::create("Partitura.pdf").unwrap()))
         .unwrap();
 }
 
-// Perf: I don't like the config function and the regex_search function
+fn config() -> (String, String, String) {
+    let title = regex_search(r"(?:title)\(([^)]+)\)", input_file().unwrap());
+    let subtitle = regex_search(r"(?:sub)\(([^)]+)\)", input_file().unwrap());
+    let author = regex_search(r"(?:autor)\(([^)]+)\)", input_file().unwrap());
+    (title.concat(), subtitle.concat(), author.concat())
+}
+
 fn regex_search(parametro: &str, input: String) -> Vec<String> {
     let re = Regex::new(&parametro).unwrap();
     let captures = re.captures_iter(&input);
@@ -52,25 +80,6 @@ fn regex_search(parametro: &str, input: String) -> Vec<String> {
         strings.push(i.get(1).unwrap().as_str().to_owned())
     }
     return strings;
-}
-
-fn config() -> (u32, (u32, u32), String) {
-    let psize = regex_search(r"(?:psize)\(([^)]+)\)", input_file().unwrap());
-    let fsize = regex_search(r"(?:fsize)\(([^)]+)\)", input_file().unwrap());
-    let title = regex_search(r"(?:title)\(([^)]+)\)", input_file().unwrap());
-    let mut psize_vec = Vec::new();
-    let mut fsize_vec = Vec::new();
-    for i in psize {
-        let hola: Vec<u32> = i.split(',').filter_map(|s| s.trim().parse().ok()).collect();
-        for e in hola {
-            psize_vec.push(e);
-        }
-    }
-    for i in fsize {
-        fsize_vec.push(i.parse().unwrap())
-    }
-    let psize_vec = psize_vec;
-    (fsize_vec[0], (psize_vec[0], psize_vec[1]), title.concat())
 }
 
 fn relative_bar(input: &str) -> f32 {
@@ -220,6 +229,11 @@ fn replace_to_lassusfont(search: Vec<Vec<Vec<String>>>) -> String {
     }
     union.concat()
 }
+fn separar(texto: &str, tamaño: f32) -> Vec<&str> {
+    let re = Regex::new(&format!(r".{{1,{}}}(.$)?", tamaño)).unwrap();
+    re.find_iter(texto).map(|mat| mat.as_str()).collect()
+}
+
 fn main() {
     let searchtimes = search_times(&input_file().unwrap());
     let hola = times_logic(searchtimes);
