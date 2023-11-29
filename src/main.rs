@@ -8,24 +8,22 @@ use std::io::BufReader;
 use std::io::BufWriter;
 mod notas;
 
-// Todo: - Hacer una función de alineación a la derecha, a la izquierda y al centro
-// otra función para pasar de la medida de la página a la cantidad de caracteres
-// cambiar la bold de los subtitulos por regular
-
-// Esto tiene que ser generalizado, para poder centrar bajar el texto, cada vez que yo cambie
-// la font.
-
 // Miscelaneaus
+// "y" = cantidad de caracteres en una determinada font que ocupa una linea
+// To center a text
 fn center(y: f32, text: String) -> f32 {
     (210 as f32 * (y as f32 - text.chars().count() as f32) / 2.0) / y as f32
 }
+// Left align
 fn l_align(y: f32, text: String) -> f32 {
     (210.0 / y as f32) * (y as f32 - text.len() as f32) - 10.0
 }
+// Line break
 fn separar(texto: &str, tamaño: f32) -> Vec<&str> {
     let re = Regex::new(&format!(r".{{1,{}}}(.$)?", tamaño)).unwrap();
     re.find_iter(texto).map(|mat| mat.as_str()).collect()
 }
+
 fn regex_search(parametro: &str, input: String) -> Vec<String> {
     let re = Regex::new(&parametro).unwrap();
     let captures = re.captures_iter(&input);
@@ -35,6 +33,7 @@ fn regex_search(parametro: &str, input: String) -> Vec<String> {
     }
     return strings;
 }
+
 // --------------------------------------
 // File Setup
 fn input_file() -> std::io::Result<String> {
@@ -51,6 +50,7 @@ fn input_file() -> std::io::Result<String> {
     Ok(section.concat())
 }
 // --------------------------------------
+
 // Extract data
 fn header() -> (String, String, String) {
     let title = regex_search(r"(?:title)\(([^)]+)\)", input_file().unwrap());
@@ -72,7 +72,7 @@ fn search_times(texto: &str) -> Vec<Vec<Vec<String>>> {
         for subcaptures in sub_re.captures_iter(&captures[2]) {
             let tiempo = &subcaptures[1];
             let contenido = &subcaptures[2];
-            let re_notas = Regex::new(r"(?:nota)\(([^)]+)\)").unwrap();
+            let re_notas = Regex::new(r"(?:nota)\(([^)]+)\)").expect("No se encontraron notas");
             let mut subvector = Vec::new();
 
             subvector.push(tiempo.to_string());
@@ -102,15 +102,13 @@ fn relative_bar(input: &str) -> f32 {
     }
 }
 // --------------------------------------
+
 // Music logic
 fn times_logic(e: Vec<Vec<Vec<String>>>) -> Vec<Vec<Vec<String>>> {
     let mut returning_vector = Vec::new();
     for i in e {
         let mut container_vectors = Vec::new();
-        for (index, e) in i.iter().enumerate() {
-            if index == 0 {
-                // returning_vector.push(vec![e.clone()])
-            }
+        for e in i.iter() {
             let mut vectors = Vec::new();
             let mut result = 0.0;
             for (index, elements) in e.iter().enumerate() {
